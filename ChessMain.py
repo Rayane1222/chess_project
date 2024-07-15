@@ -39,29 +39,52 @@ def main():
     gs = ChessEngine.GameState()
     loadImages()
     running = True
+    sqSelected = ()
+    playerClicks  = []
     while running:
         for event in p.event.get():
             if event.type == p.QUIT:
                 running = False
+            elif event.type == p.MOUSEBUTTONDOWN:
+                location = p.mouse.get_pos() #(x,y) location of the mouse
+                col = location [0]//SQ_SIZE
+                row = location [1]//SQ_SIZE
+                if sqSelected == (row, col): # the user clicked the same square twice
+                    sqSelected = () #deselect
+                    playerClicks = []
+                else:
+                    sqSelected = (row, col)
+                    playerClicks.append(sqSelected)
+                if len(playerClicks) == 2: #after the second click i move the piece
+                    move = ChessEngine.Move(playerClicks[0], playerClicks[1],gs.board)
+                    print(move.getChessNotation())
+                    gs.makeMove(move)
+                    sqSelected = () #reset user clicks
+                    playerClicks = []
+
+
         drawGameState(screen, gs)
         clock.tick(MAX_FPS)
         p.display.flip()
 
+
 '''
 Responsible of the graphics in the current game state 
 '''
+
+
 def drawGameState(screen, gs):
     drawBoard(screen)
     drawPieces(screen, gs.board)
+
 
 #here I will draw the squards u know for the boad
 def drawBoard(screen):
     colors = [p.Color("white"), p.Color("gray")]
     for r in range(DIMENSION):
         for c in range(DIMENSION):
-            color = colors[((r+c)%2)]
-            p.draw.rect(screen,color,p.Rect(c*SQ_SIZE,r*SQ_SIZE,SQ_SIZE,SQ_SIZE))
-
+            color = colors[((r + c) % 2)]
+            p.draw.rect(screen, color, p.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 
 # here i will draw the pieces from dak fichier ./images
@@ -69,20 +92,8 @@ def drawPieces(screen, board):
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             piece = board[r][c]
-            if piece != "--": #not empty
-                screen.blit(IMAGES[piece], p.Rect(c*SQ_SIZE,r*SQ_SIZE,SQ_SIZE,SQ_SIZE))
-
-
-
-
-
-
-
-
-
-
-
-
+            if piece != "--":  #not empty
+                screen.blit(IMAGES[piece], p.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 
 if __name__ == '__main__':

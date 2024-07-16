@@ -7,7 +7,7 @@ class GameState():
 
     #here a did create a sahbi board dyal 8x8 2D list and each of element of the list has 2 charactere
     #the fist charactere f l3iba represent a color of a piece like b black w white
-    #the second is the type i just learn from internet king K queen Q rook R pawns p bishops B knights K
+    #the second is the type i just learn from internet king K queen Q rook R pawns p bishops B knights N
     # -- is like nothing khawi empty space o sf
     def __init__(self):
         self.board = [
@@ -26,12 +26,48 @@ class GameState():
     def makeMove(self, move):
         self.board[move.startRow][move.startCol] = "--"
         self.board[move.endRow][move.endCol] = move.pieceMoved
-        self.moveLog.append(move) #log the move so we can undo it or show the history
+        self.moveLog.append(move)  #log the move so we can undo it or show the history
         self.whiteToMove = not self.whiteToMove
+
+    def undoMove(self):
+        if len(self.moveLog) != 0:
+            move = self.moveLog.pop()
+            self.board[move.startRow][move.startCol] = move.pieceMoved
+            self.board[move.endRow][move.endCol] = move.pieceCaptured
+            self.whiteToMove = not self.whiteToMove
+
+    '''
+    All moves considering checks
+    '''
+
+    def getValidMoves(self):
+        return self.getAllValidMoves()
+
+    '''
+    All moveswithout considering checks
+    '''
+
+    def getAllValidMoves(self):
+        moves = [Move((6,4),(4,4),self.board)]
+        for r in range(len(self.board)):
+            for c in range(len(self.board[r])):
+                turn = self.board[r][c][0]
+                if (turn == 'w' and self.whiteToMove) and (turn == 'b' and not self.whiteToMove):
+                    piece = self.board[r][c][1]
+                    if piece == 'p':
+                        self.getPawnMoves(r, c, moves)
+                    elif piece == 'R':
+                        self.getRookMoves(r, c, moves)
+        return moves
+
+    def getPawnMoves(self, r, c, moves):
+        pass
+
+    def getRookMoves(self, r, c, moves):
+        pass
 
 
 class Move():
-
     #key : value
 
     ranksToRows = {"1": 7, "2": 6, "3": 5, "4": 4,
@@ -39,7 +75,7 @@ class Move():
     rowsToRanks = {v: k for k, v in ranksToRows.items()}
     filesToCols = {"a": 0, "b": 1, "c": 2, "d": 3,
                    "e": 4, "f": 5, "g": 6, "h": 7}
-    colsToFiles = {v:k for k, v in filesToCols.items()}
+    colsToFiles = {v: k for k, v in filesToCols.items()}
 
     def __init__(self, startSq, endSq, board):
         self.startRow = startSq[0]
@@ -48,22 +84,22 @@ class Move():
         self.endCol = endSq[1]
         self.pieceMoved = board[self.startRow][self.startCol]
         self.pieceCaptured = board[self.endRow][self.endCol]
+        self.moveID = self.startRow * 1000 + self.startCol * 100 + self.endRow * 10 + self.endCol
+        print(self.moveID)
+
+    '''
+    Overriding the equals method
+    '''
+    def __eq__(self, other):
+        if isinstance(other, Move):
+            return self.moveID == other.moveID
+        return False
+
+
 
 
     def getChessNotation(self):
+        return self.getRankFile(self.startRow, self.startCol) + self.getRankFile(self.endRow, self.endCol)
 
-        return self.getRankFile(self.startRow, self.startCol)+ self.getRankFile(self.endRow, self.endCol)
-
-    def getRankFile(self,r,c):
-
-        return self.colsToFiles[c] +self.rowsToRanks[r]
-
-
-
-
-
-
-
-
-
-
+    def getRankFile(self, r, c):
+        return self.colsToFiles[c] + self.rowsToRanks[r]
